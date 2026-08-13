@@ -7,59 +7,202 @@
 <!-- Optional: used only to draw A2UI Icon components. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined">
 <style>
-  :root { --accent:#1a73e8; --bg:#f6f8fa; --border:#dfe3e8; }
-  * { box-sizing:border-box; }
-  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); display:flex; flex-direction:column; height:100vh; overflow:hidden; }
-  header { background:var(--accent); color:#fff; padding:.9rem 1.2rem; font-weight:700; font-size:1.1rem; display:flex; justify-content:space-between; align-items:center; }
-  .header-tag { font-size:0.8rem; background:rgba(255,255,255,0.2); padding:4px 8px; border-radius:4px; }
+  :root { 
+    --primary: #1e293b; 
+    --accent: #2563eb; 
+    --bg: #f8fafc; 
+    --border: #cbd5e1; 
+    --blue-accent: #2563eb;
+    --emerald-accent: #059669;
+    --indigo-accent: #4f46e5;
+    --amber-accent: #d97706;
+    --purple-accent: #7c3aed;
+  }
+  * { box-sizing: border-box; }
+  body { 
+    margin: 0; 
+    font-family: system-ui, -apple-system, sans-serif; 
+    background: var(--bg); 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh; 
+    overflow: hidden; 
+  }
+  header { 
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); 
+    color: #fff; 
+    padding: 0.75rem 1.25rem; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .header-tag { 
+    font-size: 0.75rem; 
+    background: rgba(255,255,255,0.15); 
+    color: #93c5fd; 
+    padding: 4px 10px; 
+    border-radius: 20px; 
+    font-weight: 600;
+  }
   
-  #main-container { display:flex; flex-direction:column; flex:1; overflow-y:auto; padding:1rem; max-width:1200px; width:100%; margin:0 auto; gap:1rem; }
+  /* 2-Column Split Layout: Left = Dashboards (Iframes), Right = Chat Window */
+  #main-container { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    flex: 1; 
+    overflow: hidden; 
+    padding: 1rem; 
+    gap: 1.25rem; 
+    max-width: 1400px; 
+    width: 100%; 
+    margin: 0 auto; 
+  }
   
-  /* Grid of Summary Dashboard Iframes */
-  .dashboard-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(270px, 1fr)); gap:1rem; width:100%; }
-  .dashboard-card { background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.05); height:220px; transition:transform 0.2s; }
-  .dashboard-card:hover { transform:translateY(-2px); box-shadow:0 4px 8px rgba(0,0,0,0.08); }
-  .dashboard-card iframe { width:100%; height:100%; border:none; }
+  /* Left Side: Color-Coded Summary Dashboards Stack */
+  .dashboard-column { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1rem; 
+    overflow-y: auto; 
+    padding-right: 0.5rem; 
+  }
+  .dashboard-column::-webkit-scrollbar { width: 6px; }
+  .dashboard-column::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
   
-  /* Chat Container Section */
-  .chat-section { background:#fff; border-radius:12px; border:1px solid var(--border); display:flex; flex-direction:column; min-height:350px; flex:1; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
-  .chat-header { background:#f1f5f9; padding:0.75rem 1rem; font-weight:600; font-size:0.95rem; color:#334155; border-bottom:1px solid var(--border); }
-  #log { flex:1; overflow-y:auto; padding:1rem; }
-  .msg { margin:.6rem 0; }
-  .msg.user { text-align:right; }
-  .bubble { display:inline-block; padding:.6rem .9rem; border-radius:12px; background:#f8fafc; border:1px solid var(--border); text-align:left; max-width:90%; white-space:pre-wrap; }
-  .msg.user .bubble { background:var(--accent); color:#fff; border:none; }
-  .bubble.rich { background:transparent; border:none; padding:0; max-width:100%; white-space:normal; }
-  
-  form { display:flex; gap:.5rem; padding:.8rem 1rem; border-top:1px solid var(--border); background:#fff; }
-  input { flex:1; padding:.7rem; border:1px solid var(--border); border-radius:8px; font-size:0.95rem; }
-  button { padding:.7rem 1.2rem; border:none; border-radius:8px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+  /* Small iframe card state + Hover to enlarge effect */
+  .dashboard-card { 
+    background: #fff; 
+    border-radius: 12px; 
+    border: 1px solid var(--border); 
+    overflow: hidden; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04); 
+    height: 195px; 
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); 
+  }
+  .dashboard-card:hover { 
+    height: 380px; /* Enlarge height on hover! */
+    transform: scale(1.02); 
+    z-index: 100;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.18); 
+  }
 
-  /* --- A2UI component styles (Card, Column, Row, Text, Divider, List, Image, Icon) --- */
-  .a2card { border:1px solid var(--border); border-radius:12px; padding:1rem; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.06); max-width:100%; }
-  .a2card + .a2card, .a2col > .a2card { margin-top:.6rem; }
-  .a2col { display:flex; flex-direction:column; gap:.4rem; }
-  .a2row { display:flex; flex-direction:row; gap:.6rem; align-items:center; flex-wrap:wrap; }
-  .a2row.between { justify-content:space-between; }
-  .a2text { margin:0; line-height:1.4; }
-  .a2text.a2-h1 { font-size:1.5rem; font-weight:700; }
-  .a2text.a2-h2 { font-size:1.25rem; font-weight:700; }
-  .a2text.a2-h3 { font-size:1.1rem; font-weight:600; }
-  .a2text.a2-h4 { font-size:1rem; font-weight:600; }
-  .a2text.a2-caption { font-size:.85rem; color:#666; }
-  .a2divider { border:none; border-top:1px solid var(--border); margin:.4rem 0; width:100%; }
-  .a2img { max-width:100%; border-radius:8px; display:block; }
-  .material-symbols-outlined { font-family:'Material Symbols Outlined'; font-size:1.25rem; line-height:1; vertical-align:middle; color:var(--accent); }
+  .dashboard-card-header {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .dashboard-card-header .hover-tip {
+    font-size: 0.7rem;
+    opacity: 0.85;
+    font-weight: normal;
+    background: rgba(255,255,255,0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .card-scorecard { border-top: 4px solid var(--purple-accent); }
+  .card-scorecard .dashboard-card-header { background: var(--purple-accent); }
+
+  .card-activities { border-top: 4px solid var(--blue-accent); }
+  .card-activities .dashboard-card-header { background: var(--blue-accent); }
+  
+  .card-health { border-top: 4px solid var(--emerald-accent); }
+  .card-health .dashboard-card-header { background: var(--emerald-accent); }
+  
+  .card-school { border-top: 4px solid var(--indigo-accent); }
+  .card-school .dashboard-card-header { background: var(--indigo-accent); }
+  
+  .card-announcements { border-top: 4px solid var(--amber-accent); }
+  .card-announcements .dashboard-card-header { background: var(--amber-accent); }
+
+  .dashboard-card iframe { 
+    flex: 1; 
+    width: 100%; 
+    border: none; 
+  }
+  
+  /* Right Side: AI Assistant Chat Section */
+  .chat-section { 
+    background: #fff; 
+    border-radius: 12px; 
+    border: 1px solid var(--border); 
+    display: flex; 
+    flex-direction: column; 
+    height: 100%; 
+    overflow: hidden; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+  }
+  .chat-header { 
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+    padding: 0.85rem 1.1rem; 
+    font-weight: 700; 
+    font-size: 1rem; 
+    color: #38bdf8; 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border); 
+  }
+  #log { flex: 1; overflow-y: auto; padding: 1rem; }
+  .msg { margin: 0.6rem 0; }
+  .msg.user { text-align: right; }
+  .bubble { 
+    display: inline-block; 
+    padding: 0.65rem 0.95rem; 
+    border-radius: 12px; 
+    background: #f1f5f9; 
+    border: 1px solid var(--border); 
+    text-align: left; 
+    max-width: 90%; 
+    white-space: pre-wrap; 
+    font-size: 0.95rem;
+  }
+  .msg.user .bubble { background: var(--accent); color: #fff; border: none; }
+  .bubble.rich { background: transparent; border: none; padding: 0; max-width: 100%; white-space: normal; }
+  
+  form { display: flex; gap: 0.5rem; padding: 0.85rem 1rem; border-top: 1px solid var(--border); background: #f8fafc; }
+  input { flex: 1; padding: 0.7rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; }
+  button { padding: 0.7rem 1.25rem; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+  button:hover { background: #1d4ed8; }
+
+  /* --- A2UI component styles --- */
+  .a2card { border: 1px solid var(--border); border-radius: 12px; padding: 1rem; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.06); max-width: 100%; }
+  .a2card + .a2card, .a2col > .a2card { margin-top: 0.6rem; }
+  .a2col { display: flex; flex-direction: column; gap: 0.4rem; }
+  .a2row { display: flex; flex-direction: row; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+  .a2row.between { justify-content: space-between; }
+  .a2text { margin: 0; line-height: 1.4; }
+  .a2text.a2-h1 { font-size: 1.5rem; font-weight: 700; }
+  .a2text.a2-h2 { font-size: 1.25rem; font-weight: 700; color: #1e293b; }
+  .a2text.a2-h3 { font-size: 1.1rem; font-weight: 600; color: #2563eb; }
+  .a2text.a2-h4 { font-size: 1rem; font-weight: 600; }
+  .a2text.a2-caption { font-size: 0.85rem; color: #64748b; }
+  .a2divider { border: none; border-top: 1px solid var(--border); margin: 0.4rem 0; width: 100%; }
+  .a2img { max-width: 100%; border-radius: 8px; display: block; }
+  .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-size: 1.25rem; line-height: 1; vertical-align: middle; color: var(--accent); }
+  
+  @media (max-width: 900px) {
+    #main-container { grid-template-columns: 1fr; overflow-y: auto; }
+  }
 </style>
 </head>
 <body>
 <header>
   <div style="display:flex; align-items:center; gap:0.75rem;">
-    <span style="font-size:1.15rem; font-weight:700;">Parent & Child Daily School & Health Concierge</span>
+    <span style="font-size:1.15rem; font-weight:700; color:#f8fafc;">Parent & Child Daily School & Health Concierge</span>
     <span class="header-tag">Live Summary Dashboards + AI Assistant</span>
   </div>
   <!-- Top Right Corner Student Avatar Profile Badge -->
-  <div style="display:flex; align-items:center; gap:0.75rem; background:rgba(255,255,255,0.15); padding:4px 12px 4px 6px; border-radius:30px; border:1px solid rgba(255,255,255,0.25);">
+  <div style="display:flex; align-items:center; gap:0.75rem; background:rgba(255,255,255,0.12); padding:4px 12px 4px 6px; border-radius:30px; border:1px solid rgba(255,255,255,0.2);">
     <img src="/leo_avatar.png" alt="Leo Avatar" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:2px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,0.15);">
     <div style="display:flex; flex-direction:column; line-height:1.2;">
       <span style="font-weight:700; font-size:0.9rem; color:#fff;">Leo 🌟</span>
@@ -69,28 +212,58 @@
 </header>
 
 <div id="main-container">
-  <!-- Summary Dashboards Iframes Section -->
-  <div class="dashboard-grid">
-    <div class="dashboard-card">
+  <!-- Left Side: Color-Coded Summary Dashboards Stack -->
+  <div class="dashboard-column">
+    <div class="dashboard-card card-scorecard">
+      <div class="dashboard-card-header">
+        <span>📊 Leo's Academic Scorecard Progression</span>
+        <span class="hover-tip">🔍 Hover to Enlarge</span>
+      </div>
+      <iframe src="/dashboard/scorecard" title="Academic Scorecard Graph"></iframe>
+    </div>
+
+    <div class="dashboard-card card-activities">
+      <div class="dashboard-card-header">
+        <span>📋 Today's Post-School Activities</span>
+        <span class="hover-tip">🔍 Hover to Enlarge</span>
+      </div>
       <iframe src="/dashboard/activities" title="Today's Activity Checklist"></iframe>
     </div>
-    <div class="dashboard-card">
+
+    <div class="dashboard-card card-health">
+      <div class="dashboard-card-header">
+        <span>🏥 Health & Medical Records</span>
+        <span class="hover-tip">🔍 Hover to Enlarge</span>
+      </div>
       <iframe src="/dashboard/health" title="Health & Pediatric Follow-ups"></iframe>
     </div>
-    <div class="dashboard-card">
+
+    <div class="dashboard-card card-school">
+      <div class="dashboard-card-header">
+        <span>🏫 Upcoming School & Classwork</span>
+        <span class="hover-tip">🔍 Hover to Enlarge</span>
+      </div>
       <iframe src="/dashboard/school" title="Upcoming School & Classwork"></iframe>
     </div>
-    <div class="dashboard-card">
+
+    <div class="dashboard-card card-announcements">
+      <div class="dashboard-card-header">
+        <span>🔔 Important Notifications</span>
+        <span class="hover-tip">🔍 Hover to Enlarge</span>
+      </div>
       <iframe src="/dashboard/announcements" title="Important Notifications"></iframe>
     </div>
   </div>
 
-  <!-- Interactive AI Concierge Chat Section -->
+  <!-- Right Side: AI Concierge Interactive Assistant Chat Section -->
   <div class="chat-section">
-    <div class="chat-header">💬 AI Concierge Interactive Assistant</div>
+    <div class="chat-header">
+      <span>💬 AI Concierge Assistant</span>
+      <span style="font-size:0.75rem; color:#94a3b8; font-weight:normal;">Gemini Powered • A2UI Native</span>
+    </div>
     <div id="log"></div>
     <form id="form">
-      <input id="input" placeholder="Ask about Leo's homework, medical alerts, or Cordos Elementary updates..." autocomplete="off" autofocus>
+      <input id="input" placeholder="Ask about Leo's homework, lunch menu, medical alerts, or Cordos Elementary updates..." autocomplete="off" autofocus>
       <button>Send</button>
     </form>
   </div>

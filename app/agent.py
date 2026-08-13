@@ -72,6 +72,7 @@ from app.firestore_tools import (
     add_evening_activity,
     add_medical_record,
     check_medical_followup_alerts,
+    check_school_lunch_and_advise_parents,
     generate_student_avatar_picture,
     get_evening_activities,
     get_medical_records,
@@ -91,11 +92,13 @@ instruction = schema_manager.generate_system_prompt(
     role_description=(
         "You are a Parent & Child Daily School & Health Concierge assistant. "
         "You help parents track daily school progress, evening activity checklists, "
-        "medical/health records, Cordos Elementary School emails, upcoming follow-ups, "
-        "student picture generation/reward avatars with emojis, and parent-child coaching advice."
+        "school cafeteria lunch menus & food preferences, medical/health records, "
+        "Cordos Elementary School emails, upcoming follow-ups, student picture avatars, "
+        "and parent-child coaching advice."
     ),
     workflow_description=(
         "Use `fetch_cordos_elementary_emails` to read Cordos Elementary School emails, announcements, and teacher updates. "
+        "Use `check_school_lunch_and_advise_parents` to check today's cafeteria lunch menu against the child's liked/disliked food preferences and advise parents whether to prepare a home packed lunch. "
         "Use `check_medical_followup_alerts` to check upcoming or overdue annual checkups, flu shots, and prescription refills. "
         "Use `generate_student_avatar_picture` to create a student picture, reward avatar, or accomplishment badge using Imagen. "
         "Use `send_parent_guidance_and_advice` when parents want to advise or encourage their child to focus on homework, activities, or chores. "
@@ -130,6 +133,7 @@ root_agent = Agent(
         get_weather,
         get_current_time,
         fetch_cordos_elementary_emails,
+        check_school_lunch_and_advise_parents,
         check_medical_followup_alerts,
         generate_student_avatar_picture,
         send_parent_guidance_and_advice,

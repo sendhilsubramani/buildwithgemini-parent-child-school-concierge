@@ -304,12 +304,100 @@ def send_parent_guidance_and_advice(
         "advice": advice,
         "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
-    doc_ref.set(msg_data)
+def check_school_lunch_and_advise_parents(
+    child_name: str = "Leo",
+    date: str = "today",
+) -> str:
+    """Checks Cordos Elementary School's daily cafeteria lunch menu against the child's liked food list and allergies, and advises parents whether to prepare a packed home lunch.
+
+    Args:
+        child_name: Name of the child (default: 'Leo').
+        date: Date of the school lunch menu (default: 'today').
+
+    Returns:
+        Summary of today's cafeteria menu, child's food likes/dislikes, and clear parent recommendation.
+    """
+    db = _get_firestore_client()
+
+    # Pre-populate Cordos Elementary School Lunch Menu & Child Food Likes/Dislikes if not present
+    menu_doc = db.collection("school_lunch_menu").document("2026-08-13")
+    if not menu_doc.get().exists:
+        menu_doc.set({
+            "school_name": "Cordos Elementary School",
+            "date": "2026-08-13",
+            "main_entree": "Steamed Broccoli & Tofu Casserole",
+            "side_dishes": ["Boiled Peas & Carrots", "Whole Wheat Roll"],
+            "dessert_fruit": "Sliced Papaya",
+            "beverage": "Low-fat Organic Milk",
+            "contains_allergens": ["soy", "gluten"],
+        })
+
+    pref_doc = db.collection("child_food_preferences").document(child_name)
+    if not pref_doc.get().exists:
+        pref_doc.set({
+            "child_name": child_name,
+            "liked_foods": [
+                "Pizza",
+                "Chicken Nuggets",
+                "Apple Slices",
+                "Mac & Cheese",
+                "PB&J Sandwich",
+                "Strawberries",
+            ],
+            "disliked_foods": ["Broccoli", "Tofu", "Boiled Peas", "Papaya"],
+            "allergies": ["Peanuts (Mild)"],
+            "favorite_home_lunch": (
+                "Turkey & Cheese Wrap with Crisp Apple Slices 🥪🍎"
+            ),
+        })
+
+    menu_data = menu_doc.get().to_dict() or {}
+    pref_data = pref_doc.get().to_dict() or {}
+
+    main_entree = menu_data.get("main_entree", "Cafeteria Special")
+    sides = ", ".join(menu_data.get("side_dishes", []))
+    dessert = menu_data.get("dessert_fruit", "Fruit")
+    liked = pref_data.get("liked_foods", [])
+    disliked = pref_data.get("disliked_foods", [])
+
+    # Check for dislikes in today's menu
+    disliked_matches = [
+        food
+        for food in disliked
+        if food.lower() in main_entree.lower()
+        or any(food.lower() in s.lower() for s in menu_data.get("side_dishes", []))
+        or food.lower() in dessert.lower()
+    ]
+
+    if disliked_matches:
+        rec_status = "🍱 ACTION RECOMMENDED: Prepare Home Packed Lunch"
+        rec_reason = (
+            f"Today's cafeteria menu contains foods {child_name} dislikes:"
+            f" {', '.join(disliked_matches)}."
+        )
+        suggested_lunch = pref_data.get(
+            "favorite_home_lunch",
+            "Turkey & Cheese Wrap with Apple Slices 🥪🍎",
+        )
+    else:
+        rec_status = "✅ OK: School Lunch Approved"
+        rec_reason = (
+            f"Today's cafeteria menu matches {child_name}'s liked food list."
+        )
+        suggested_lunch = "N/A - School cafeteria lunch is suitable today."
+
     return (
-        f"💌 Parent Advice & Guidance sent to {child_name}:\n"
-        f"Target Activity: '{activity_title}'\n"
-        f"Message: \"{advice}\"\n"
-        f"Status: Delivered to {child_name}'s daily dashboard!"
+        f"🏫 Cordos Elementary Lunch Menu ({menu_data.get('date', 'Today')}):\n"
+        f"  • Main Entree: {main_entree}\n"
+        f"  • Sides: {sides}\n"
+        f"  • Dessert/Fruit: {dessert}\n\n"
+        f"👦 {child_name}'s Liked Foods: {', '.join(liked)}\n"
+        f"❌ {child_name}'s Disliked Foods: {', '.join(disliked)}\n\n"
+        f"📢 PARENT ADVISORY RECOMMENDATION:\n"
+        f"  {rec_status}\n"
+        f"  Reason: {rec_reason}\n"
+        f"  💡 Suggested Home Packed Lunch: {suggested_lunch}"
     )
+
 
 

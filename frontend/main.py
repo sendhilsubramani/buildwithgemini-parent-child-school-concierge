@@ -353,8 +353,89 @@ async def dashboard_announcements():
     """
 
 
+@app.get("/dashboard/scorecard", response_class=HTMLResponse)
+async def dashboard_scorecard():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            body { font-family: system-ui, sans-serif; margin: 0; padding: 10px; background: #ffffff; color: #1e293b; }
+            h3 { margin: 0 0 6px 0; color: #7c3aed; font-size: 1.05rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; }
+            .badge { background: #f3e8ff; color: #7c3aed; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 700; }
+            .chart-container { position: relative; width: 100%; height: 260px; }
+            .stats-row { display: flex; justify-content: space-around; margin-top: 8px; background: #f8fafc; padding: 6px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.8rem; font-weight: 600; text-align: center; }
+            .stat-val { color: #7c3aed; font-size: 0.95rem; font-weight: 800; }
+        </style>
+    </head>
+    <body>
+        <h3>
+            <span>📊 Academic Scorecard Progression</span>
+            <span class="badge">Grade 2 → Grade 4 (Current)</span>
+        </h3>
+        <div class="stats-row">
+            <div>Grade 2 (2024)<br><span class="stat-val">82.3%</span></div>
+            <div>Grade 3 (2025)<br><span class="stat-val">88.3%</span></div>
+            <div>Grade 4 (Current)<br><span class="stat-val" style="color:#059669;">94.3% ⭐</span></div>
+        </div>
+        <div class="chart-container">
+            <canvas id="scoreChart"></canvas>
+        </div>
+        <script>
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Grade 2 (2024)', 'Grade 3 (2025)', 'Grade 4 (Current)'],
+                    datasets: [
+                        {
+                            label: 'Math (%)',
+                            data: [82, 88, 95],
+                            backgroundColor: '#2563eb'
+                        },
+                        {
+                            label: 'Science (%)',
+                            data: [85, 91, 96],
+                            backgroundColor: '#059669'
+                        },
+                        {
+                            label: 'Reading & Language (%)',
+                            data: [80, 86, 92],
+                            backgroundColor: '#4f46e5'
+                        },
+                        {
+                            label: 'Overall GPA (%)',
+                            data: [82.3, 88.3, 94.3],
+                            type: 'line',
+                            borderColor: '#d97706',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { min: 70, max: 100, ticks: { stepSize: 5 } }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } }
+                    }
+                }
+            });
+        </script>
+    </body>
+    </html>
+    """
+
+
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+
 
 
 if __name__ == "__main__":
